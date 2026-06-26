@@ -10,12 +10,16 @@ Agent A actua como segunda linea automatizada antes de que la decision impacte p
 El flujo usa LangGraph para orquestar, Pydantic para validar contratos, RAG vectorial con
 `sentence-transformers/all-MiniLM-L6-v2` para consultar politicas, Ollama local para clasificar
 la accion de Agent B en JSON estructurado y `reglas.json` para aplicar controles duros.
+La defensa tecnica esta en la trazabilidad: politica recuperada, accion clasificada, reglas aplicadas,
+score calculado y razon final por cada caso.
 
 ## Slide 3 - Evidencia de los 4 casos
 
 Caso 1 y 2 pasan porque respetan limite o escalan correctamente.
 Caso 3 falla por superar el limite de emision automatica.
 Caso 4 es critico porque una alerta SARLAFT/AML exige bloqueo inmediato.
+La lectura ejecutiva es simple: los casos 1 y 2 pueden continuar; los casos 3 y 4 se frenan
+antes de generar riesgo financiero o regulatorio.
 
 ## Slide 4 - Lectura de riesgo
 
