@@ -1,0 +1,79 @@
+[
+  {
+    "id_caso": 1,
+    "estado_transaccion": "CONFORME - APROBADA",
+    "indice_fidelidad_analitica": 93.12,
+    "consistencia_semantica": 65.58,
+    "diagnostico": "Controles activados: LIMITE_MONETARIO. El monto aprobado USD 900 esta dentro del limite USD 1,200. La accion detectada (aprobar) coincide con la accion esperada. Consistencia RAG vectorial/accion: 65.58/100.",
+    "decision_recomendada": "Continuar la transaccion con trazabilidad.",
+    "controles_activados": [
+      "LIMITE_MONETARIO"
+    ],
+    "accion_detectada": "aprobar",
+    "accion_esperada": "aprobar",
+    "cumplimiento_numerico": true,
+    "fuentes_rag": [
+      "data/politicas/poliza_auto.md",
+      "data/politicas/poliza_vida.md"
+    ],
+    "analisis_llm": "Clasificacion estructurada equivalente al contrato LLM para demo local."
+  },
+  {
+    "id_caso": 2,
+    "estado_transaccion": "CONFORME - ESCALADA A ANALISTA",
+    "indice_fidelidad_analitica": 93.18,
+    "consistencia_semantica": 65.89,
+    "diagnostico": "Controles activados: ABUSO_SINIESTROS. La accion detectada (rechazar_o_escalar) coincide con la accion esperada. Consistencia RAG vectorial/accion: 65.89/100.",
+    "decision_recomendada": "Pausar la automatizacion y escalar a analista.",
+    "controles_activados": [
+      "ABUSO_SINIESTROS"
+    ],
+    "accion_detectada": "rechazar_o_escalar",
+    "accion_esperada": "rechazar_o_escalar",
+    "cumplimiento_numerico": true,
+    "fuentes_rag": [
+      "data/politicas/siniestros_abuso.md",
+      "data/politicas/sarlaft_aml.md"
+    ],
+    "analisis_llm": "Clasificacion estructurada equivalente al contrato LLM para demo local."
+  },
+  {
+    "id_caso": 3,
+    "estado_transaccion": "NO CONFORME - REQUIERE REVISION",
+    "indice_fidelidad_analitica": 21.0,
+    "consistencia_semantica": 44.99,
+    "diagnostico": "Controles activados: LIMITE_MONETARIO, EXAMENES_MEDICOS_VIDA. El monto aprobado USD 95,000 supera el limite USD 80,000. La accion detectada (aprobar) no coincide con la accion esperada (rechazar_o_escalar). Consistencia RAG vectorial/accion: 44.99/100.",
+    "decision_recomendada": "Pausar la automatizacion y escalar a analista.",
+    "controles_activados": [
+      "LIMITE_MONETARIO",
+      "EXAMENES_MEDICOS_VIDA"
+    ],
+    "accion_detectada": "aprobar",
+    "accion_esperada": "rechazar_o_escalar",
+    "cumplimiento_numerico": false,
+    "fuentes_rag": [
+      "data/politicas/poliza_vida.md",
+      "data/politicas/poliza_auto.md"
+    ],
+    "analisis_llm": "Clasificacion estructurada equivalente al contrato LLM para demo local."
+  },
+  {
+    "id_caso": 4,
+    "estado_transaccion": "NO CONFORME - BLOQUEO CRITICO",
+    "indice_fidelidad_analitica": 34.38,
+    "consistencia_semantica": 46.88,
+    "diagnostico": "Controles activados: AML_LISTA_RESTRICTIVA. La accion detectada (aprobar) no coincide con la accion esperada (bloquear). Consistencia RAG vectorial/accion: 46.88/100.",
+    "decision_recomendada": "Bloquear la transaccion y escalar a Cumplimiento/SARLAFT.",
+    "controles_activados": [
+      "AML_LISTA_RESTRICTIVA"
+    ],
+    "accion_detectada": "aprobar",
+    "accion_esperada": "bloquear",
+    "cumplimiento_numerico": true,
+    "fuentes_rag": [
+      "data/politicas/sarlaft_aml.md",
+      "data/politicas/siniestros_abuso.md"
+    ],
+    "analisis_llm": "Clasificacion estructurada equivalente al contrato LLM para demo local."
+  }
+]

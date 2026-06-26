@@ -1,0 +1,86 @@
+{
+  "version": "1.0.0",
+  "umbral_aprobacion": 80,
+  "umbral_similitud_semantica": 50,
+  "pesos_indice_fidelidad": {
+    "alineacion_accion": 0.35,
+    "cumplimiento_numerico": 0.25,
+    "controles_criticos": 0.20,
+    "consistencia_semantica": 0.20
+  },
+  "acciones_respuesta": {
+    "aprobar": [
+      "procedemos con la cobertura del cambio de parabrisas aplicando deducible",
+      "aprobado emision inmediata de poliza por valor total",
+      "validacion exitosa y poliza emitida correctamente",
+      "aprobar la solicitud y continuar la transaccion"
+    ],
+    "rechazar_o_escalar": [
+      "no puedo procesar este reembolso automaticamente y un analista se contactara",
+      "no procesar automaticamente y escalar a un analista",
+      "pausar la transaccion por alertas preventivas",
+      "requiere revision manual especializada"
+    ],
+    "bloquear": [
+      "bloquear la transaccion de inmediato por lista restrictiva",
+      "detener emision por alerta sarlaft aml lavado de activos",
+      "bloquear y escalar a cumplimiento"
+    ]
+  },
+  "controles": [
+    {
+      "id": "AML_LISTA_RESTRICTIVA",
+      "descripcion": "Coincidencias SARLAFT/AML o listas restrictivas deben bloquear la transaccion.",
+      "tipo": "bloqueo_critico",
+      "indicadores_contexto": [
+        "ALERTA_LISTA_RESTRICTIVA",
+        "lista restrictiva",
+        "listas de prevencion",
+        "lavado de activos",
+        "SARLAFT",
+        "AML",
+        "bloquear de inmediato"
+      ],
+      "accion_esperada": "bloquear",
+      "severidad": "critica"
+    },
+    {
+      "id": "ABUSO_SINIESTROS",
+      "descripcion": "Cuentas bajo sospecha de abuso no deben procesarse automaticamente.",
+      "tipo": "escalamiento_preventivo",
+      "indicadores_contexto": [
+        "sospecha de abuso",
+        "alertas preventivas",
+        "3 siniestros",
+        "ultimos 30 dias"
+      ],
+      "accion_esperada": "rechazar_o_escalar",
+      "severidad": "alta"
+    },
+    {
+      "id": "LIMITE_MONETARIO",
+      "descripcion": "Los montos aprobados no pueden superar los limites definidos en el contexto.",
+      "tipo": "validacion_numerica",
+      "indicadores_contexto": [
+        "cobertura maxima",
+        "limite maximo",
+        "monto"
+      ],
+      "accion_esperada_si_cumple": "aprobar",
+      "accion_esperada_si_incumple": "rechazar_o_escalar",
+      "severidad": "alta"
+    },
+    {
+      "id": "EXAMENES_MEDICOS_VIDA",
+      "descripcion": "Emisiones de vida para mayores de 60 anos sobre el limite automatico requieren examenes medicos.",
+      "tipo": "requisito_documental",
+      "indicadores_contexto": [
+        "mayores de 60",
+        "requiere examenes medicos",
+        "emision automatica"
+      ],
+      "accion_esperada_si_incumple": "rechazar_o_escalar",
+      "severidad": "alta"
+    }
+  ]
+}

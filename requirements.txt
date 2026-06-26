@@ -1,0 +1,5 @@
+pydantic>=2.0.0
+langgraph>=0.6.0
+sentence-transformers>=5.0.0
+numpy>=1.25.0
+rich>=13.0.0

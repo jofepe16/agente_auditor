@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.DS_Store
+.git/
+.venv/
+venv/
+docs/
+outputs/
+tests/
+Reto Especialista.pdf
