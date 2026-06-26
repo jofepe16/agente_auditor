@@ -31,7 +31,7 @@ en `reglas.json` y las politicas usadas por el RAG estan en `data/politicas/`.
 
 ## Ejecucion
 
-Comando recomendado:
+Comandos:
 
 ```bash
 python3 src/auditor_agent.py audit --plain --llm-provider deterministic
