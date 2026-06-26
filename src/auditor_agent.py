@@ -47,12 +47,16 @@ class Severity(str, Enum):
 
 
 class AuditCase(BaseModel):
+    """Entrada minima que llega desde los logs de Agent B."""
+
     id_caso: int = Field(gt=0)
     contexto_rag: str = Field(min_length=10)
     respuesta_agent_b: str = Field(min_length=10)
 
 
 class ControlRule(BaseModel):
+    """Regla configurable de negocio o cumplimiento definida en reglas.json."""
+
     id: str
     descripcion: str
     tipo: str
@@ -76,6 +80,8 @@ class ControlRule(BaseModel):
 
 
 class FidelityWeights(BaseModel):
+    """Pesos usados para construir el indice final de fidelidad analitica."""
+
     alineacion_accion: float = Field(ge=0, le=1)
     cumplimiento_numerico: float = Field(ge=0, le=1)
     controles_criticos: float = Field(ge=0, le=1)
@@ -95,6 +101,8 @@ class FidelityWeights(BaseModel):
 
 
 class RulesConfig(BaseModel):
+    """Contrato del archivo reglas.json."""
+
     version: str
     umbral_aprobacion: float = Field(ge=0, le=100)
     umbral_similitud_semantica: float = Field(ge=0, le=100)
@@ -114,12 +122,16 @@ class RulesConfig(BaseModel):
 
 @dataclass
 class NumericFinding:
+    """Resultado de comparar montos aprobados contra limites del contexto."""
+
     compliant: bool
     context_limit: Optional[float] = None
     approved_amount: Optional[float] = None
 
 
 class LlmFinding(BaseModel):
+    """Salida estructurada que debe entregar el clasificador LLM."""
+
     accion_detectada: Action
     contradiccion_normativa: bool
     nivel_riesgo: str = Field(pattern="^(bajo|medio|alto|critico)$")
@@ -142,6 +154,8 @@ class LlmFinding(BaseModel):
 
 @dataclass
 class RagDocument:
+    """Politica recuperada desde la base documental junto con su score vectorial."""
+
     source: str
     text: str
     score: float
@@ -149,6 +163,8 @@ class RagDocument:
 
 @dataclass
 class AuditResult:
+    """Diagnostico final entregado por el agente auditor."""
+
     id_caso: int
     estado_transaccion: str
     indice_fidelidad_analitica: float
@@ -176,12 +192,15 @@ class AuditState(TypedDict, total=False):
 
 
 class VectorPolicyIndex:
+    """Indice vectorial local para recuperar politicas por similitud semantica."""
+
     def __init__(self, policies_path: Path, model_name: str = MODEL_NAME) -> None:
         self.model = self._load_model(model_name)
         self.sources, self.documents = self._load_documents(policies_path)
         self.embeddings = self._normalize(self.model.encode(self.documents, convert_to_numpy=True))
 
     def search(self, query: str, k: int = 2) -> List[RagDocument]:
+        """Retorna las politicas mas cercanas al caso auditado."""
         query_embedding = self._normalize(self.model.encode([query], convert_to_numpy=True))[0]
         scores = self.embeddings @ query_embedding
         ranking = np.argsort(scores)[::-1][:k]
@@ -195,6 +214,7 @@ class VectorPolicyIndex:
         ]
 
     def similarity(self, left: str, right: str) -> float:
+        """Calcula cercania semantica entre dos textos usando embeddings."""
         embeddings = self._normalize(self.model.encode([left, right], convert_to_numpy=True))
         return round(float(np.dot(embeddings[0], embeddings[1]) * 100), 2)
 
@@ -216,6 +236,8 @@ class VectorPolicyIndex:
 
 
 class OllamaClient:
+    """Cliente minimo para clasificar respuestas con un modelo local de Ollama."""
+
     def __init__(self, model: str = OLLAMA_MODEL, url: str = "http://127.0.0.1:11434/api/generate") -> None:
         self.model = model
         self.url = url
@@ -224,6 +246,7 @@ class OllamaClient:
         return self.analyze_many([(case, policies)])[case.id_caso]
 
     def analyze_many(self, items: Sequence[tuple[AuditCase, Sequence[RagDocument]]]) -> Dict[int, LlmFinding]:
+        """Clasifica en lote la accion tomada por Agent B."""
         cases_payload = []
         for case, _ in items:
             cases_payload.append(
@@ -268,48 +291,9 @@ Formato: {{"casos":[{{"id_caso":1,"accion_detectada":"aprobar","contradiccion_no
         except Exception as exc:
             raise SystemExit(f"No fue posible obtener analisis batch desde Ollama: {exc}") from exc
 
-    def _analyze_single_legacy(self, case: AuditCase, policies: Sequence[RagDocument]) -> LlmFinding:
-        policy_context = "\n\n".join(
-            f"Fuente: {document.source}\n{document.text}" for document in policies
-        )
-        prompt = f"""
-Actua como auditor de seguros. Responde solo JSON.
-Acciones validas: aprobar, rechazar_o_escalar, bloquear, indeterminado.
-Riesgos validos: bajo, medio, alto, critico.
-
-Politicas:
-{policy_context[:1800]}
-
-Caso:
-{case.contexto_rag}
-
-Decision Agent B:
-{case.respuesta_agent_b}
-
-JSON:
-{{"accion_detectada":"","contradiccion_normativa":false,"nivel_riesgo":"","razon":""}}
-""".strip()
-        payload = {
-            "model": self.model,
-            "prompt": prompt,
-            "stream": False,
-            "format": "json",
-            "options": {"temperature": 0, "num_predict": 160},
-        }
-        request = urllib.request.Request(
-            self.url,
-            data=json.dumps(payload).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
-        )
-        try:
-            with urllib.request.urlopen(request, timeout=240) as response:
-                raw_response = json.loads(response.read().decode("utf-8"))["response"]
-            return LlmFinding.model_validate(normalize_llm_payload(json.loads(raw_response)))
-        except Exception as exc:
-            raise SystemExit(f"No fue posible obtener analisis estructurado desde Ollama: {exc}") from exc
-
-
 class DeterministicLlmClient:
+    """Clasificador local reproducible para ejecutar la demo sin depender de Ollama."""
+
     def analyze_many(self, items: Sequence[tuple[AuditCase, Sequence[RagDocument]]]) -> Dict[int, LlmFinding]:
         return {case.id_caso: self.analyze(case, policies) for case, policies in items}
 
@@ -336,6 +320,8 @@ class DeterministicLlmClient:
 
 
 class AuditAgent:
+    """Orquesta RAG, clasificacion de accion, controles y diagnostico final."""
+
     def __init__(self, rules: RulesConfig, index: VectorPolicyIndex, llm: OllamaClient) -> None:
         self.rules = rules
         self.index = index
@@ -343,6 +329,7 @@ class AuditAgent:
         self.graph = self._build_graph()
 
     def audit(self, cases: Sequence[AuditCase]) -> List[AuditResult]:
+        """Audita una lista de casos y conserva evidencia RAG por cada uno."""
         prepared = []
         for case in cases:
             documents = self.index.search(f"{case.contexto_rag}\n{case.respuesta_agent_b}", k=2)
@@ -360,6 +347,7 @@ class AuditAgent:
         return results
 
     def _build_graph(self):
+        """Define el flujo auditable ejecutado por LangGraph."""
         graph = StateGraph(AuditState)
         graph.add_node("retrieve", self._retrieve)
         graph.add_node("llm_review", self._llm_review)
@@ -389,6 +377,7 @@ class AuditAgent:
         return {"llm_finding": self.llm.analyze(state["case"], state["rag_documents"])}
 
     def _evaluate(self, state: AuditState) -> AuditState:
+        """Activa controles, valida montos y determina la accion esperada."""
         case = state["case"]
         controls = self._active_controls(case.contexto_rag)
         numeric = self._numeric_finding(case)
@@ -402,6 +391,7 @@ class AuditAgent:
         }
 
     def _decide(self, state: AuditState) -> AuditState:
+        """Calcula score, estado de transaccion y razon de negocio."""
         case = state["case"]
         controls = state["controls"]
         numeric = state["numeric"]
@@ -479,6 +469,7 @@ class AuditAgent:
         controls: Sequence[ControlRule],
         consistency: float,
     ) -> float:
+        """Combina reglas, montos, controles criticos y consistencia semantica."""
         weights = self.rules.pesos_indice_fidelidad
         score = (
             self._action_score(detected, expected) * weights.alineacion_accion
