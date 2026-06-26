@@ -523,7 +523,7 @@ class AuditAgent:
             parts.append(f"La accion detectada ({detected.value}) coincide con la accion esperada.")
         else:
             parts.append(f"La accion detectada ({detected.value}) no coincide con la accion esperada ({expected.value}).")
-        parts.append(f"Consistencia RAG vectorial/accion: {consistency:.2f}/100.")
+        parts.append(f"Consistencia semantica: {consistency:.2f}/100.")
         return " ".join(parts)
 
     def _recommendation(self, expected: Action) -> str:
@@ -604,8 +604,8 @@ def render_table(results: Sequence[AuditResult], output: Path) -> None:
     table.add_column("Caso", justify="right")
     table.add_column("Estado")
     table.add_column("Indice", justify="right")
-    table.add_column("RAG/Accion", justify="right")
-    table.add_column("LLM")
+    table.add_column("Consistencia", justify="right")
+    table.add_column("Accion detectada")
     table.add_column("Fuentes")
     table.add_column("Decision recomendada")
     for result in results:
