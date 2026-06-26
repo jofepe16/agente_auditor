@@ -16,7 +16,7 @@
       "data/politicas/poliza_auto.md",
       "data/politicas/poliza_vida.md"
     ],
-    "analisis_llm": "Clasificacion estructurada equivalente al contrato LLM para demo local."
+    "analisis_llm": "Clasificacion estructurada de la respuesta del agente."
   },
   {
     "id_caso": 2,
@@ -35,7 +35,7 @@
       "data/politicas/siniestros_abuso.md",
       "data/politicas/sarlaft_aml.md"
     ],
-    "analisis_llm": "Clasificacion estructurada equivalente al contrato LLM para demo local."
+    "analisis_llm": "Clasificacion estructurada de la respuesta del agente."
   },
   {
     "id_caso": 3,
@@ -55,7 +55,7 @@
       "data/politicas/poliza_vida.md",
       "data/politicas/poliza_auto.md"
     ],
-    "analisis_llm": "Clasificacion estructurada equivalente al contrato LLM para demo local."
+    "analisis_llm": "Clasificacion estructurada de la respuesta del agente."
   },
   {
     "id_caso": 4,
@@ -74,6 +74,6 @@
       "data/politicas/sarlaft_aml.md",
       "data/politicas/siniestros_abuso.md"
     ],
-    "analisis_llm": "Clasificacion estructurada equivalente al contrato LLM para demo local."
+    "analisis_llm": "Clasificacion estructurada de la respuesta del agente."
   }
 ]

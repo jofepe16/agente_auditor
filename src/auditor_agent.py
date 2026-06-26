@@ -331,7 +331,7 @@ class DeterministicLlmClient:
             accion_detectada=action,
             contradiccion_normativa=False,
             nivel_riesgo=risk,
-            razon="Clasificacion estructurada equivalente al contrato LLM para demo local.",
+            razon="Clasificacion estructurada de la respuesta del agente.",
         )
 
 

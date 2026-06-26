@@ -1,55 +1,69 @@
-# Agent A: Auditor con LangGraph y RAG vectorial
+# Agent A: auditor de decisiones de IA en seguros
 
-Solucion profesional para auditar decisiones de un agente autonomo de seguros.
-El agente usa un flujo orquestado con `LangGraph`, valida contratos con `Pydantic`,
-consulta una base documental mediante embeddings reales de `sentence-transformers`
-y puede incorporar un LLM local con Ollama para clasificar la accion tomada por Agent B.
+Este proyecto implementa un agente auditor para revisar decisiones generadas por
+un agente autonomo de seguros. La solucion combina recuperacion semantica de
+politicas, validacion de reglas de negocio y una salida trazable para explicar
+por que una transaccion puede continuar, escalarse o bloquearse.
 
-## Arquitectura
+## Flujo de trabajo
 
 ```text
-logs Agent B
-  -> validacion Pydantic
-  -> RAG vectorial sobre data/politicas
-  -> analisis LLM estructurado
-  -> evaluacion de reglas criticas
+logs de Agent B
+  -> validacion de estructura
+  -> recuperacion RAG sobre politicas internas
+  -> clasificacion de la accion tomada
+  -> controles de negocio y riesgo
   -> indice de fidelidad analitica
-  -> diagnostico y reporte JSON
+  -> diagnostico final
 ```
 
-El codigo principal esta concentrado en `src/auditor_agent.py` para que la solucion
-sea facil de sustentar y no tenga archivos auxiliares innecesarios.
+El codigo principal esta en `src/auditor_agent.py`. Las reglas de control viven
+en `reglas.json` y las politicas usadas por el RAG estan en `data/politicas/`.
 
-## Librerias usadas
+## Componentes
 
-- `langgraph`: orquestacion del flujo del agente auditor.
-- `sentence-transformers`: generacion de embeddings semanticos.
-- `numpy`: indice vectorial local y similitud coseno.
-- `Ollama`: LLM local para clasificacion estructurada de la respuesta.
-- `pydantic`: validacion de casos y reglas.
-- `rich`: tabla ejecutiva en consola.
+- `LangGraph`: organiza el flujo del agente.
+- `sentence-transformers`: genera embeddings semanticos.
+- `NumPy`: calcula similitud coseno sobre los vectores.
+- `Pydantic`: valida datos de entrada, reglas y salida estructurada.
+- `Ollama`: permite usar un LLM local para clasificar la respuesta de Agent B.
+- `Rich`: muestra una tabla ejecutiva en consola.
 
 ## Ejecucion
 
-```bash
-python3 src/auditor_agent.py audit
-```
-
-Modo demo rapido, sin depender de latencia del modelo local:
-
-```bash
-python3 src/auditor_agent.py audit --llm-provider deterministic
-```
-
-Formato exacto solicitado por el reto:
+Comando recomendado:
 
 ```bash
 python3 src/auditor_agent.py audit --plain --llm-provider deterministic
 ```
 
-El modelo usado es `sentence-transformers/all-MiniLM-L6-v2`. Debe estar descargado
-en cache local para ejecutar sin red.
-Para Ollama, el modelo por defecto es `llama3.2:3b` y puede cambiarse con `--ollama-model`.
+Este comando imprime la salida con el formato solicitado por el reto.
+
+Para ver una tabla resumida en consola:
+
+```bash
+python3 src/auditor_agent.py audit --llm-provider deterministic
+```
+
+Si Ollama esta levantado localmente:
+
+```bash
+python3 src/auditor_agent.py audit --plain --llm-provider ollama
+```
+
+El modelo de embeddings es `sentence-transformers/all-MiniLM-L6-v2`. Para Ollama,
+el modelo por defecto es `llama3.2:3b` y puede cambiarse con `--ollama-model`.
+
+## Docker
+
+```bash
+docker build -t agent-a-auditor .
+docker run --rm agent-a-auditor
+```
+
+La imagen usa el modo deterministico para mantener una ejecucion reproducible.
+Ollama se puede usar por fuera del contenedor cuando se quiera probar el flujo
+con LLM local.
 
 ## Pruebas
 
@@ -57,35 +71,18 @@ Para Ollama, el modelo por defecto es `llama3.2:3b` y puede cambiarse con `--oll
 python3 -m unittest discover -s tests
 ```
 
-## Docker
+## Base de conocimiento
 
-Construir imagen:
-
-```bash
-docker build -t agent-a-auditor .
+```text
+data/politicas/
+  poliza_auto.md
+  poliza_vida.md
+  sarlaft_aml.md
+  siniestros_abuso.md
 ```
 
-Ejecutar demo estable:
-
-```bash
-docker run --rm agent-a-auditor
-```
-
-El contenedor ejecuta el modo deterministico para evitar depender de Ollama local
-dentro de la imagen. Ollama puede usarse desde la maquina anfitriona ejecutando
-directamente el comando Python con `--llm-provider ollama`.
-
-## Base RAG
-
-La base documental esta en `data/politicas/`:
-
-- `poliza_auto.md`
-- `poliza_vida.md`
-- `sarlaft_aml.md`
-- `siniestros_abuso.md`
-
-Cada politica se vectoriza con embeddings. La recuperacion se hace por similitud
-coseno contra la consulta formada con el contexto RAG y la respuesta de Agent B.
+Cada politica se convierte en embedding. El caso auditado tambien se vectoriza y
+se compara contra esas politicas mediante similitud coseno.
 
 ## Indice de Fidelidad Analitica
 
@@ -95,13 +92,13 @@ El indice va de 0 a 100 y combina:
 - Cumplimiento numerico.
 - Controles criticos.
 - Consistencia entre RAG vectorial y accion esperada.
-- Analisis LLM estructurado como insumo de accion detectada.
+- Clasificacion estructurada de la respuesta de Agent B.
 
-Los pesos y umbrales viven en `reglas.json`.
+Los pesos y umbrales se configuran en `reglas.json`.
 
-## Resultado esperado
+## Casos cubiertos
 
-- Caso 1: conforme, aprueba una cobertura dentro del limite.
-- Caso 2: conforme, escala una cuenta con sospecha de abuso.
-- Caso 3: no conforme, aprueba USD 95,000 cuando el limite automatico es USD 80,000.
-- Caso 4: bloqueo critico, ignora una alerta SARLAFT/AML.
+- Caso 1: aprobacion conforme, monto dentro del limite de cobertura.
+- Caso 2: escalamiento conforme por sospecha de abuso.
+- Caso 3: no conforme, aprobacion por encima del limite automatico.
+- Caso 4: bloqueo critico, alerta SARLAFT/AML ignorada.
