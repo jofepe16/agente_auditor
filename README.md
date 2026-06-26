@@ -62,6 +62,7 @@ docker run --rm agent-a-auditor
 ```
 
 La imagen usa el modo deterministico para mantener una ejecucion reproducible.
+Durante el build se descarga el modelo de embeddings usado por el RAG.
 Ollama se puede usar por fuera del contenedor cuando se quiera probar el flujo
 con LLM local.
 
