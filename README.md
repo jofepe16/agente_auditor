@@ -102,3 +102,34 @@ Los pesos y umbrales se configuran en `reglas.json`.
 - Caso 2: escalamiento conforme por sospecha de abuso.
 - Caso 3: no conforme, aprobacion por encima del limite automatico.
 - Caso 4: bloqueo critico, alerta SARLAFT/AML ignorada.
+
+## Escalamiento cloud
+
+Para produccion, el agente auditor se puede desplegar como un servicio
+independiente entre Agent B y los sistemas transaccionales de la aseguradora.
+
+Arquitectura sugerida:
+
+```text
+Canales digitales
+  -> Agent B
+  -> Agent A Auditor
+  -> decision: continuar, escalar o bloquear
+  -> sistemas core / cola de analistas
+```
+
+Componentes recomendados:
+
+- API Gateway para exponer el servicio de auditoria.
+- Contenedor o funcion serverless para ejecutar Agent A.
+- Vector store administrado para politicas y clausulados.
+- Repositorio versionado para `reglas.json`.
+- Event bus para auditoria asincronica de alto volumen.
+- Data lake para trazabilidad historica.
+- Monitoreo de latencia, errores, drift semantico y casos no conformes.
+- Tablero operativo para Riesgos, Tecnologia y Cumplimiento.
+
+El flujo sincrono debe reservarse para decisiones de alto impacto, como pagos,
+emisiones, listas restrictivas o desviaciones de limite. Para monitoreo masivo,
+el mismo agente puede ejecutarse de forma asincronica sobre eventos, sin afectar
+la experiencia del cliente.
